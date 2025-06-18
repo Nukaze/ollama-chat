@@ -4,6 +4,8 @@ import json
 class OllamaClient:
     def __init__(self, base_url="http://localhost:11434"):
         self.base_url = base_url
+        self.models = self.get_available_models()
+
 
     def get_available_models(self):
         """Get list of available models from Ollama"""
@@ -16,13 +18,14 @@ class OllamaClient:
             print(f"Error fetching models: {e}")
             return []
 
-    def generate_response(self, model, prompt, system_prompt=None, temperature=0.5):
+
+    def generate_response(self, model, prompt, system_prompt=None, temperature=0.5, stream=False):
         """Generate a response from the specified model"""
         try:
             payload = {
                 "model": model,
                 "prompt": prompt,
-                "stream": False,
+                "stream": stream,
                 "temperature": temperature
             }
             
