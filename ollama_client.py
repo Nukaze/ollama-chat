@@ -1,0 +1,41 @@
+import requests
+import json
+
+class OllamaClient:
+    def __init__(self, base_url="http://localhost:11434"):
+        self.base_url = base_url
+
+    def get_available_models(self):
+        """Get list of available models from Ollama"""
+        try:
+            response = requests.get(f"{self.base_url}/api/tags")
+            if response.status_code == 200:
+                return response.json().get("models", [])
+            return []
+        except Exception as e:
+            print(f"Error fetching models: {e}")
+            return []
+
+    def generate_response(self, model, prompt, system_prompt=None, temperature=0.5):
+        """Generate a response from the specified model"""
+        try:
+            payload = {
+                "model": model,
+                "prompt": prompt,
+                "stream": False,
+                "temperature": temperature
+            }
+            
+            if system_prompt:
+                payload["system"] = system_prompt
+
+            response = requests.post(
+                f"{self.base_url}/api/generate",
+                json=payload
+            )
+            
+            if response.status_code == 200:
+                return response.json().get("response", "Error: No response generated")
+            return f"Error: {response.status_code} - {response.text}"
+        except Exception as e:
+            return f"Error: {str(e)}" 
