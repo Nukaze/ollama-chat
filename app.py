@@ -51,6 +51,7 @@ with st.sidebar:
     
     # Model selection
     models = st.session_state.ollama_client.get_available_models()
+    # TODO: suggest url https://ollama.com/library
     selected_model = st.selectbox(
         "Select Model",
         options=[model["name"] for model in models] if models else ["gemma3:latest"],

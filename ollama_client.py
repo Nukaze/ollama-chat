@@ -10,6 +10,7 @@ class OllamaClient:
     def get_available_models(self):
         """Get list of available models from Ollama"""
         try:
+            # http://localhost:11434/api/tags
             response = requests.get(f"{self.base_url}/api/tags")
             if response.status_code == 200:
                 return response.json().get("models", [])
@@ -19,6 +20,7 @@ class OllamaClient:
             return []
 
 
+    # TODO streaming result
     def generate_response(self, model, prompt, system_prompt=None, temperature=0.5, stream=False):
         """Generate a response from the specified model"""
         try:
@@ -38,7 +40,10 @@ class OllamaClient:
             )
             
             if response.status_code == 200:
+                # success
                 return response.json().get("response", "Error: No response generated")
+        
             return f"Error: {response.status_code} - {response.text}"
+        
         except Exception as e:
             return f"Error: {str(e)}" 
