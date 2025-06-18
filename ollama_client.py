@@ -2,8 +2,9 @@ import requests
 import json
 
 class OllamaClient:
-    def __init__(self, base_url="http://localhost:11434"):
-        self.base_url = base_url
+    def __init__(self, base_url=None):
+        # Get base_url from Streamlit secrets, fallback to localhost if not set
+        self.base_url = base_url or st.secrets.get("OLLAMA_BASE_URL", "http://localhost:11434")
         self.models = self.get_available_models()
 
 
