@@ -1,4 +1,12 @@
 import streamlit as st
+
+# Page config must be the first Streamlit command
+st.set_page_config(
+    page_title="Ollama Chat",
+    page_icon="🤖",
+    layout="wide"
+)
+
 from ollama_client import OllamaClient
 import time
 
@@ -7,14 +15,15 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "ollama_client" not in st.session_state:
-    st.session_state.ollama_client = OllamaClient()
-
-# Page config
-st.set_page_config(
-    page_title="Ollama Chat",
-    page_icon="🤖",
-    layout="wide"
-)
+    # Try to get Ollama URL from Streamlit secrets (for cloud deployment)
+    ollama_url = None
+    try:
+        ollama_url = st.secrets["OLLAMA_BASE_URL"]
+    except:
+        # If no secret is set, will fallback to environment variable or localhost
+        pass
+    
+    st.session_state.ollama_client = OllamaClient(base_url=ollama_url)
 
 # Custom CSS
 st.markdown("""
@@ -114,24 +123,28 @@ if prompt := st.chat_input("What's on your mind?"):
     
     # Generate response
     with st.spinner("Thinking..."):
-        response = st.session_state.ollama_client.generate_response(
+        # Create an empty placeholder for the streaming response
+        response_placeholder = st.empty()
+        full_response = ""
+        
+        # Get streaming response
+        for response_chunk in st.session_state.ollama_client.generate_response(
             model=selected_model,
             prompt=prompt,
             system_prompt=system_prompt,
             temperature=temperature
-        )
-        
-        # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        
-        # Display assistant response
-        with st.container():
-            st.markdown(f"""
+        ):
+            full_response += response_chunk
+            # Update the response in real-time
+            response_placeholder.markdown(f"""
             <div class="chat-message assistant">
                 <div style="display: flex; align-items: center;">
                     <span style="font-weight: bold;">🤖</span>
                     <span style="margin-left: 0.5rem;">Assistant</span>
                 </div>
-                <div style="margin-top: 0.5rem;">{response}</div>
+                <div style="margin-top: 0.5rem;">{full_response}</div>
             </div>
-            """, unsafe_allow_html=True) 
+            """, unsafe_allow_html=True)
+        
+        # Add the complete response to chat history
+        st.session_state.messages.append({"role": "assistant", "content": full_response}) 
