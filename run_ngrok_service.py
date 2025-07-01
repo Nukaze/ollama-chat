@@ -1,6 +1,7 @@
 import os
 import subprocess
 from dotenv import load_dotenv
+import argparse
 
 # Load environment variables from .env file if present
 load_dotenv()
@@ -20,10 +21,13 @@ on_http_request:
         f.write(policy_content)
 
 
-
-
-# ngrok http 11434 --host-header="localhost:11434" --traffic-policy-file=policy_basic_auth.yaml
-if __name__ == "__main__":
+def main():
+    parser = argparse.ArgumentParser(description="Launch Ollama, ngrok, and optionally Streamlit with basic auth.")
+    parser.add_argument("--run-streamlit", default=False, help="Start running Streamlit")
+    
+    args = parser.parse_args()
+    
+    
     CREATE_NEW_CONSOLE = subprocess.CREATE_NEW_CONSOLE
     
     TARGET_PORT = 11434
@@ -38,10 +42,10 @@ if __name__ == "__main__":
     update_policy_file(USERNAME, PASSWORD, POLICY_FILE)
     
     
-    # start Ollama on port 11434
-    ollama_cmd = ["ollama", "serve"]
     try:
-      print("Starting ollama server")
+      # start Ollama on port 11434
+      ollama_cmd = ["ollama", "serve"]
+      print("Starting Ollama server")
       subprocess.Popen(
         ollama_cmd, 
         creationflags=CREATE_NEW_CONSOLE
@@ -50,19 +54,42 @@ if __name__ == "__main__":
       print(f"Error ollama, {e}")
     
 
-    # Start ngrok as a subprocess
-    ngrok_cmd = [
-        'ngrok', 'http', str(TARGET_PORT),
-        f'--host-header=localhost:{TARGET_PORT}',
-        f'--traffic-policy-file={POLICY_FILE}'
-    ]
 
     try:
-      print(f"Starting ngrok service with command: {' '.join(ngrok_cmd)}")
+      # Start ngrok as a subprocess
+      # ngrok http 11434 --host-header="localhost:11434" --traffic-policy-file=policy_basic_auth.yaml
+      ngrok_cmd = [
+          'ngrok', 'http', str(TARGET_PORT),
+          f'--host-header=localhost:{TARGET_PORT}',
+          f'--traffic-policy-file={POLICY_FILE}'
+      ]
+      print(f"Starting NGRok service with command: {' '.join(ngrok_cmd)}")
       subprocess.Popen(
         ngrok_cmd,
         creationflags=CREATE_NEW_CONSOLE
       )
     except Exception as e:
-      print(f"Error ngrok, {e}")
+      print(f"Error NGRok, {e}")
       
+      
+    try:
+      # Start streamlit run process on local demo not cloud (default --run-streamlit=false)
+      if args.run_streamlit:
+        streamlit_cmd = [
+          "streamlit", "run", "app.py"
+        ]
+        
+        print("Starting Streamlit service with command")
+        subprocess.Popen(
+          streamlit_cmd,
+          creationflags=CREATE_NEW_CONSOLE
+        )
+      
+    except Exception as e:
+      print(f"Error Streamlit, {e}")
+
+
+
+
+if __name__ == "__main__":
+    main()
