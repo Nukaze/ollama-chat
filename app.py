@@ -19,11 +19,12 @@ if "ollama_client" not in st.session_state:
     ollama_url = None
     try:
         ollama_url = st.secrets["OLLAMA_BASE_URL"]
+        print("ollama url", ollama_url)
+        st.session_state.ollama_client = OllamaClient(base_url=ollama_url)
     except:
         # If no secret is set, will fallback to environment variable or localhost
         pass
     
-    st.session_state.ollama_client = OllamaClient(base_url=ollama_url)
 
 # Custom CSS
 st.markdown("""
