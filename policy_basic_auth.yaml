@@ -1,0 +1,9 @@
+on_http_request:
+  - actions:
+      - type: basic-auth
+        config:
+          realm: "Ollama Access"
+          credentials:
+            - user:password
+
+# ngrok http 11434 --host-header="localhost:11434" --traffic-policy-file=policy_basic_auth.yaml
