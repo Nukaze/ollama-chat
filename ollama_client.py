@@ -5,18 +5,37 @@ import streamlit as st
 from dotenv import load_dotenv
 
 class OllamaClient:
-    def __init__(self, base_url=None):
+    def __init__(self, base_url=None, username=None, password=None):
         # Try to get base_url in following order:
         # 1. Passed parameter
         # 2. Environment variable (for local development)
         # 3. Default localhost
-        if base_url:
-            self.base_url = base_url
-        else:
-            # Load environment variables from .env file (local development)
-            load_dotenv()
-            self.base_url = st.secrets.get("OLLAMA_BASE_URL", "http://localhost:11434")
         
+        # Load environment variables from .env file (local development)
+        load_dotenv()
+        
+        self.base_url = (
+            base_url 
+            or st.secrets.get("OLLAMA_BASE_URL") 
+            or os.getenv("OLLAMA_BASE_URL") 
+            or "http://localhost:11434"
+        )
+        self.username = (
+            username 
+            or st.secrets.get("NGROK_BASIC_AUTH_USERNAME") 
+            or os.getenv("NGROK_BASIC_AUTH_USERNAME")
+        )
+        self.password = (
+            password 
+            or st.secrets.get("NGROK_BASIC_AUTH_PASSWORD") 
+            or os.getenv("NGROK_BASIC_AUTH_PASSWORD")
+        )
+        
+        self.auth = (self.username, self.password) if self.username and self.password else None
+            
+        if not self.base_url:
+            self.base_url = "http://localhost:11434"
+            
         self.models = self.get_available_models()
 
 
@@ -24,7 +43,7 @@ class OllamaClient:
         """Get list of available models from Ollama"""
         try:
             # http://localhost:11434/api/tags
-            response = requests.get(f"{self.base_url}/api/tags")
+            response = requests.get(f"{self.base_url}/api/tags", auth=self.auth)
             if response.status_code == 200:
                 return response.json().get("models", [])
             return []
@@ -53,7 +72,8 @@ class OllamaClient:
             response = requests.post(
                 f"{self.base_url}/api/generate",
                 json=payload,
-                stream=stream
+                stream=stream,
+                auth=self.auth
             )
             
             if not stream:
