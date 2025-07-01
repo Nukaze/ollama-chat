@@ -4,8 +4,6 @@ on_http_request:
         config:
           realm: "Ollama Access"
           credentials:
-            - "<username>:<password>"
-          
+            - user:password
 
-# create ngrok connection with policy
 # ngrok http 11434 --host-header="localhost:11434" --traffic-policy-file=policy_basic_auth.yaml
