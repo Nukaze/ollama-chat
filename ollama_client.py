@@ -10,6 +10,8 @@ class OllamaClient:
         # 1. Passed parameter
         # 2. Environment variable (for local development)
         # 3. Default localhost
+        
+        # Load environment variables from .env file (local development)
         load_dotenv()
         
         self.base_url = (
@@ -28,10 +30,8 @@ class OllamaClient:
             or st.secrets.get("NGROK_BASIC_AUTH_PASSWORD") 
             or os.getenv("NGROK_BASIC_AUTH_PASSWORD")
         )
+        
         self.auth = (self.username, self.password) if self.username and self.password else None
-        
-        # Load environment variables from .env file (local development)
-        
             
         if not self.base_url:
             self.base_url = "http://localhost:11434"
@@ -43,8 +43,7 @@ class OllamaClient:
         """Get list of available models from Ollama"""
         try:
             # http://localhost:11434/api/tags
-            auth = (self.username, self.password) if self.username and self.password else None
-            response = requests.get(f"{self.base_url}/api/tags", auth=auth)
+            response = requests.get(f"{self.base_url}/api/tags", auth=self.auth)
             if response.status_code == 200:
                 return response.json().get("models", [])
             return []
@@ -70,12 +69,11 @@ class OllamaClient:
             if system_prompt:
                 payload["system"] = system_prompt
 
-            auth = (self.username, self.password) if self.username and self.password else None
             response = requests.post(
                 f"{self.base_url}/api/generate",
                 json=payload,
                 stream=stream,
-                auth=auth
+                auth=self.auth
             )
             
             if not stream:
