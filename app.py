@@ -44,7 +44,8 @@ st.markdown("""
         color: white;
     }
     .chat-message.assistant {
-        background-color: #f0f2f6;
+        background-color: #2b313e;
+        color: white
     }
     .chat-message .avatar {
         width: 20px;
